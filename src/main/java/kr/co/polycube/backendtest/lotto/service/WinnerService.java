@@ -47,6 +47,7 @@ public class WinnerService {
             // 일치하는 번호 개수로 등수를 정할 경우 2개 이상 맞춰야 당첨
             if (matchCount >= 2) {
                 int rank = (int) (7 - matchCount);
+                log.info("당첨자 저장됨 - Lotto ID: {}, Rank: {}", lotto.getId(), rank);
                 winnerRepository.save(
                         Winner.builder()
                               .lotto(lotto)
