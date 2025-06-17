@@ -62,6 +62,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
 
+        user.setName(userNameDto.getName());
+
         return UserDto.builder()
                       .id(user.getId())
                       .name(user.getName())
