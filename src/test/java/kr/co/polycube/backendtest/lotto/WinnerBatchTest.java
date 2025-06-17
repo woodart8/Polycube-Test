@@ -51,6 +51,7 @@ class WinnerBatchTest {
 
         when(lottoRepository.findAll()).thenReturn(testLottos);
 
+        // DB에 저장하지 않고 로깅만 수행
         doAnswer(invocation -> {
             Lotto lotto = invocation.getArgument(0, Winner.class).getLotto();
             int rank = invocation.getArgument(0, Winner.class).getRank();
@@ -58,6 +59,7 @@ class WinnerBatchTest {
             return null;
         }).when(winnerRepository).save(any(Winner.class));
 
+        // 로또 당첨 번호를 정해진 번호로 하고 로직 수행 (기존 로직은 랜덤이었음)
         doAnswer(invocation -> {
             List<Lotto> lottos = lottoRepository.findAll();
             for (Lotto lotto : lottos) {
@@ -84,6 +86,6 @@ class WinnerBatchTest {
 
         // Then
         verify(winnerService, times(1)).checkWinnersAndSave(); // 배치 중 1번 수행
-        verify(winnerRepository, times(1)).save(any(Winner.class)); // 1번 로또 당첨
+        verify(winnerRepository, times(1)).save(any(Winner.class)); // 1번 회원만 당첨
     }
 }

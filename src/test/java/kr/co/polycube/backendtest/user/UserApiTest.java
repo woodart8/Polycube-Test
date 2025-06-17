@@ -47,11 +47,12 @@ class UserApiTest {
            }
            """;
 
+        // 항상 1번 회원으로 생성되도록 모킹
         when(userService.createUser(any(UserNameDto.class)))
                 .thenAnswer(invocation ->
                         UserIdDto.builder()
-                                .id(1L)
-                                .build()
+                                 .id(1L)
+                                 .build()
                 );
 
         // When & Then
@@ -77,6 +78,7 @@ class UserApiTest {
                                      .name(name)
                                      .build();
 
+        // DB에 1번 회원이 없어도 결과가 나오도록 모킹
         when(userService.getUser(id)).thenReturn(mockUserDto);
 
         // When & Then
@@ -101,6 +103,7 @@ class UserApiTest {
            }
            """;
 
+        // DB에 1번 회원이 없어도 변경된 정보로 나오도록 모킹
         when(userService.updateUser(eq(id), any(UserNameDto.class)))
                 .thenAnswer(invocation -> {
                     UserNameDto userNameDto = invocation.getArgument(1);
@@ -150,6 +153,7 @@ class UserApiTest {
            }
            """;
 
+        // createUser가 CommonException을 발생하도록 모킹
         when(userService.createUser(any(UserNameDto.class)))
                 .thenThrow(new CommonException(ErrorCode.INVALID_USER_NAME));
 
@@ -170,6 +174,8 @@ class UserApiTest {
     void testUserNotFound() throws Exception {
         // Given
         long id = 1L;
+
+        // getUser가 CommonException을 발생하도록 모킹
         when(userService.getUser(id)).thenThrow(new CommonException(ErrorCode.NOT_FOUND_USER));
 
         // When & Then
