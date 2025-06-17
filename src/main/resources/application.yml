@@ -1,0 +1,16 @@
+spring:
+  mvc:
+    static-path-pattern: /static/**
+  datasource:
+    url: jdbc:h2:mem:lottodb
+    driver-class-name: org.h2.Driver
+    username: pc
+    password: 2024
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
