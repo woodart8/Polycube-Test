@@ -1,8 +1,5 @@
 package kr.co.polycube.backendtest.user;
 
-import kr.co.polycube.backendtest.common.exception.CommonException;
-import kr.co.polycube.backendtest.common.exception.ErrorCode;
-import kr.co.polycube.backendtest.user.dto.UserDto;
 import kr.co.polycube.backendtest.user.dto.UserIdDto;
 import kr.co.polycube.backendtest.user.dto.UserNameDto;
 import kr.co.polycube.backendtest.user.service.UserService;
@@ -12,16 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,12 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class UserApiTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
     private UserService userService;
 
     @DisplayName("\"POST /users\" API에 대한 통합 테스트")
@@ -46,14 +41,6 @@ class UserApiTest {
              "name": "전기범"
            }
            """;
-
-        // 항상 1번 회원으로 생성되도록 모킹
-        when(userService.createUser(any(UserNameDto.class)))
-                .thenAnswer(invocation ->
-                        UserIdDto.builder()
-                                 .id(1L)
-                                 .build()
-                );
 
         // When & Then
         MvcResult result = mockMvc.perform(post("/users")
@@ -71,20 +58,16 @@ class UserApiTest {
     @Test
     void testGetUserApi() throws Exception {
         // Given
-        Long id = 1L;
-        String name = "전기범";
-        UserDto mockUserDto = UserDto.builder()
-                                     .id(id)
-                                     .name(name)
-                                     .build();
-
-        // DB에 1번 회원이 없어도 결과가 나오도록 모킹
-        when(userService.getUser(id)).thenReturn(mockUserDto);
+        UserIdDto userIdDto = userService.createUser(
+                UserNameDto.builder()
+                           .name("전기범")
+                           .build()
+        );
 
         // When & Then
-        MvcResult result = mockMvc.perform(get("/users/{id}", id))
+        MvcResult result = mockMvc.perform(get("/users/{id}", userIdDto.getId()))
                                   .andExpect(status().isOk())
-                                  .andExpect(jsonPath("$.id").value(id))
+                                  .andExpect(jsonPath("$.id").value(userIdDto.getId()))
                                   .andExpect(jsonPath("$.name").value("전기범"))
                                   .andReturn();
 
@@ -96,29 +79,24 @@ class UserApiTest {
     @Test
     void testUpdateUserApi() throws Exception {
         // Given
-        Long id = 1L;
+        UserIdDto userIdDto = userService.createUser(
+                UserNameDto.builder()
+                        .name("전기범")
+                        .build()
+        );
+
         String requestBody = """
            {
              "name": "전수범"
            }
            """;
 
-        // DB에 1번 회원이 없어도 변경된 정보로 나오도록 모킹
-        when(userService.updateUser(eq(id), any(UserNameDto.class)))
-                .thenAnswer(invocation -> {
-                    UserNameDto userNameDto = invocation.getArgument(1);
-                    return UserDto.builder()
-                            .id(id)
-                            .name(userNameDto.getName())
-                            .build();
-                });
-
         // When & Then
-        MvcResult result = mockMvc.perform(patch("/users/{id}", id)
+        MvcResult result = mockMvc.perform(patch("/users/{id}", userIdDto.getId())
                                           .contentType(MediaType.APPLICATION_JSON)
                                           .content(requestBody))
                                   .andExpect(status().isOk())
-                                  .andExpect(jsonPath("$.id").value(id))
+                                  .andExpect(jsonPath("$.id").value(userIdDto.getId()))
                                   .andExpect(jsonPath("$.name").value("전수범"))
                                   .andReturn();
 
@@ -153,10 +131,6 @@ class UserApiTest {
            }
            """;
 
-        // createUser가 CommonException을 발생하도록 모킹
-        when(userService.createUser(any(UserNameDto.class)))
-                .thenThrow(new CommonException(ErrorCode.INVALID_USER_NAME));
-
         // When & Then
         MvcResult result = mockMvc.perform(post("/users")
                                           .contentType(MediaType.APPLICATION_JSON)
@@ -173,10 +147,7 @@ class UserApiTest {
     @Test
     void testUserNotFound() throws Exception {
         // Given
-        long id = 1L;
-
-        // getUser가 CommonException을 발생하도록 모킹
-        when(userService.getUser(id)).thenThrow(new CommonException(ErrorCode.NOT_FOUND_USER));
+        long id = 0;
 
         // When & Then
         MvcResult result = mockMvc.perform(get("/users/{id}", id))
