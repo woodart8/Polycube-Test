@@ -16,7 +16,7 @@ public class Winner {
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lotto_id")
     private Lotto lotto;
 
