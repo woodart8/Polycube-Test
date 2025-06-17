@@ -109,10 +109,9 @@ class UserApiTest {
     void testInvalidCharInApiUrl() throws Exception {
         // Given
         Long id = 1L;
-        String name = "test";
 
         // When & Then
-        MvcResult result = mockMvc.perform(get("/users/{id}?name=[name}!!", id, name))
+        MvcResult result = mockMvc.perform(get("/users/{id}?name=test!!", id))
                                   .andExpect(status().isBadRequest())
                                   .andExpect(jsonPath("$.reason").exists())
                                   .andReturn();
